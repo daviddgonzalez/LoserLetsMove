@@ -6,9 +6,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Find pybind11 and Python
-find_package(pybind11 REQUIRED)
-find_package(Python3 COMPONENTS Development.Module REQUIRED)
+# Find Python first
+find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
+
+# Ask Python exactly where pybind11 is installed inside the virtual environment
+execute_process(
+    COMMAND "${Python3_EXECUTABLE}" -m pybind11 --cmakedir
+    OUTPUT_VARIABLE pybind11_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Find pybind11 using that exact path
+find_package(pybind11 REQUIRED PATHS "${pybind11_DIR}" NO_DEFAULT_PATH)
 
 # Include directories
 include_directories(include)
@@ -20,9 +29,8 @@ pybind11_add_module(pke_cpp
     src/joint_angles.cpp
 )
 
-# Optimization flags for blazing fast execution
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    target_compile_options(pke_cpp PRIVATE /O2 /fp:fast)
-else()
-    target_compile_options(pke_cpp PRIVATE -O3 -ffast-math)
-endif()
+# Optimization flags — only apply in Release mode to avoid /RTC1 conflict
+target_compile_options(pke_cpp PRIVATE
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /fp:fast>
+    $<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -ffast-math>
+)

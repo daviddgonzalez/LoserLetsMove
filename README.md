@@ -63,10 +63,20 @@ To support both live tracking and a fallback MVP, the pipeline standardizes arou
 2. **Distance Calculation:** The embedding is compared against the user's calibration centroid in the Supabase database.
 3. **Algorithmic Fallback:** If the distance exceeds the acceptable threshold, Dynamic Time Warping (DTW) temporally aligns the bad rep with a calibration rep, computing cosine similarity of joint angles to report the exact error.
 
-## Next Steps / Todo
-* Set up a Dockerfile for the FastAPI backend containing PyTorch and OpenCV dependencies.
-* Initialize Supabase project (PostgreSQL database and Storage buckets).
-* Implement the Path B (MVP) Python extraction script.
-* Implement data normalization logic (root-centering, scaling).
-* Define the ST-GCN architecture in PyTorch.
-* Implement the Siamese evaluation logic and thresholding.
+## Build Progress
+
+- [x] **Phase 1** — Docker + Backend Scaffold + Supabase Schema
+- [x] **Phase 2** — Extraction + Normalization Pipeline
+- [x] **Phase 3** — C++ Module (DTW + Joint Angles via pybind11)
+- [ ] **Phase 4** — ST-GCN Architecture (in progress)
+- [ ] **Phase 5** — Calibration + Evaluation Services
+- [ ] **Phase 6** — Frontend (React/TypeScript)
+- [ ] **Phase 7** — Live Pipeline (WebSocket real-time inference)
+- [ ] **Phase 8** — Pre-training (Fit3D dataset)
+
+## Deferred Architecture Decisions
+
+> Revisit these during Phase 8 (Fit3D pre-training) when we have real training data at scale.
+
+- [ ] **6-layer → 9-layer ST-GCN expansion** — MVP uses 6 layers (~1.2M params, ~30-50ms CPU inference) to keep the param-to-data ratio sane during calibration fine-tuning with only 3-10 reps. `num_layers` is config-driven (`settings.stgcn_num_layers`); bumping to 9 (~2.5M params, ~80-120ms) is a one-line change. 6-layer weights can transfer into the first 6 layers of a 9-layer model. Expand when Fit3D gives enough data to justify the extra capacity.
+- [ ] **Cosine Embedding Loss → NT-Xent** — MVP uses Cosine Embedding Loss (works with explicit pairs, no batch-size dependency, one-line PyTorch). NT-Xent (SimCLR-style) is more powerful but needs large batches for implicit negatives — with 3-10 calibration reps the batch is too small to leverage its advantage, and all batch items are the same exercise so "implicit negatives" are barely negative. Revisit when Fit3D pre-training provides real batch diversity (hundreds+ sequences across exercises).
