@@ -3,9 +3,29 @@
 # Personalized Kinematic Evaluator (PKE)
 
 ## Overview
+
+BASIC BASIC Overview:
+
+Hey Vsauce, David here
+Essentially it's 5 steps:
+
+1. Input - either video input for the minimum viable product (MVP) OR streamed via computer vision through a websocket connection (Think livestreaming)
+
+2. Extraction - Blazepose - create the "skeleton" that represents the person, 33 joints go into a 33 node graph with bones as edges. Takes care of blurry frames, parts of body out of screen, etc.
+
+3. Euclidean Normalization - center is hips, essentially make it so its the same whether you're 5 feet away or 2 feet away. Also if you're 6 feet or 4 feet. Temporal Resampling - essentially if the original clip is 30 seconds and you send in a 4 minute version, it speeds it up to 30 seconds. If you send in a super fast 15 second clip, it slows it down to 30 seconds. This is so it can compare 30 seconds of dance/exercise to 30 seconds.
+
+4. Embedding Storage/Creation - Embedding is just 256 variables describing the video - we pass a tensor - literally js 2D array - through the neural network to create these embeddings. User sends in 3-5 videos, we create the average of the 3-5 embeddings, then store in supabase.
+
+5. Evaluation - These 256 variables are like angles between body parts, angle you're leaning, etc. We use cosine similarity to compare two embeddings so the general proportions have to be the same, not magnitudes. If your angles are too far from the training data marked wrong, otherwise it's good :]
+
+
 This project is an asynchronous Computer Vision pipeline designed to evaluate and correct human movement. Rather than comparing users to a rigid "universal expert," the system utilizes a User-Calibrated Siamese Network. It learns an individual's safe, baseline mobility and evaluates daily workouts against their personal biomechanical profile, flagging deviations and isolating the exact joints that broke form.
 
 The system is designed with a dual-ingestion architecture, supporting both real-time data capture from live footage and a fallback MVP handling pre-recorded video uploads.
+
+
+
 
 ## Tech Stack
 * **Frontend:** React and TypeScript.
