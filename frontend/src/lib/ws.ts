@@ -8,8 +8,8 @@ import type { WSFrameMessage, WSIncomingMessage } from "./types";
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL ||
   (typeof window !== "undefined"
-    ? `ws://${window.location.hostname}:8080`
-    : "ws://localhost:8080");
+    ? `ws://${window.location.hostname}:8001`
+    : "ws://localhost:8001");
 
 export type WSEventHandler = (message: WSIncomingMessage) => void;
 export type WSErrorHandler = (error: Event | Error) => void;

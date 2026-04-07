@@ -29,7 +29,7 @@ export default function LivePage() {
           </p>
           <ul className="text-xs text-[var(--pke-text-secondary)] mt-1 space-y-0.5 list-disc list-inside">
             <li>Camera access must be granted</li>
-            <li>Backend server must be running on port 8000</li>
+            <li>Backend server must be running and connected</li>
             <li>WebGL support required for MediaPipe GPU acceleration</li>
             <li>Calibration for the exercise should be completed first</li>
           </ul>

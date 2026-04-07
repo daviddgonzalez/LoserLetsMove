@@ -14,7 +14,7 @@ import type {
 } from "./types";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 async function request<T>(
   path: string,
