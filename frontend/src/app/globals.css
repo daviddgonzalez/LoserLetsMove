@@ -3,51 +3,47 @@
 /* ─── PKE Design System ──────────────────────────────────── */
 
 :root {
-  /* Brand Colors */
-  --pke-bg-primary: #0b0f1a;
-  --pke-bg-secondary: #111827;
-  --pke-bg-card: #1a2236;
-  --pke-bg-card-hover: #1f2a42;
-  --pke-bg-surface: #151d2e;
-  --pke-bg-input: #1a2236;
+  /* Modern Sleek Light Mode Palette */
+  --pke-bg-primary: #ffffff;
+  --pke-bg-secondary: #f8fafc;
+  --pke-bg-card: #ffffff;
+  --pke-bg-card-hover: #f1f5f9;
+  --pke-bg-surface: #f1f5f9;
+  --pke-bg-input: #ffffff;
 
-  --pke-border: #2a3550;
-  --pke-border-hover: #3d4f73;
-  --pke-border-focus: #6366f1;
+  --pke-border: #e2e8f0;
+  --pke-border-hover: #cbd5e1;
+  --pke-border-focus: #0f172a;
 
-  --pke-text-primary: #f1f5f9;
-  --pke-text-secondary: #94a3b8;
-  --pke-text-muted: #64748b;
+  --pke-text-primary: #0f172a;
+  --pke-text-secondary: #475569;
+  --pke-text-muted: #94a3b8;
 
-  /* Accent Palette */
-  --pke-accent: #6366f1;
-  --pke-accent-hover: #818cf8;
-  --pke-accent-glow: rgba(99, 102, 241, 0.25);
-  --pke-success: #22c55e;
+  /* Accent Palette - Sleek Mono with subtle color */
+  --pke-accent: #0f172a;
+  --pke-accent-hover: #334155;
+  --pke-accent-glow: rgba(15, 23, 42, 0.1);
+  --pke-success: #10b981;
   --pke-warning: #f59e0b;
   --pke-danger: #ef4444;
-  --pke-info: #06b6d4;
+  --pke-info: #0ea5e9;
 
   /* Gradients */
-  --pke-gradient-brand: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
-  --pke-gradient-card: linear-gradient(145deg, #1a2236, #151d2e);
-  --pke-gradient-hero: linear-gradient(135deg, #0b0f1a 0%, #1a1040 50%, #0b0f1a 100%);
+  --pke-gradient-brand: linear-gradient(135deg, #0f172a, #334155);
+  --pke-gradient-card: linear-gradient(145deg, #ffffff, #f8fafc);
+  --pke-gradient-hero: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 
   /* Shadows */
-  --pke-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --pke-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --pke-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --pke-shadow-glow: 0 0 24px var(--pke-accent-glow);
+  --pke-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --pke-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
+  --pke-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+  --pke-shadow-glow: 0 0 12px var(--pke-accent-glow);
 
-  /* Spacing */
-  --pke-radius-sm: 8px;
-  --pke-radius-md: 12px;
-  --pke-radius-lg: 16px;
-  --pke-radius-xl: 24px;
-
-  /* Sidebar */
-  --pke-sidebar-width: 260px;
-  --pke-sidebar-collapsed: 72px;
+  /* Spacing - SHARP EDGES */
+  --pke-radius-sm: 0px;
+  --pke-radius-md: 0px;
+  --pke-radius-lg: 0px;
+  --pke-radius-xl: 0px;
 
   /* Transitions */
   --pke-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -61,8 +57,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plus-jakarta);
 }
 
 /* ─── Base ────────────────────────────────────────────── */
@@ -75,7 +70,7 @@
 body {
   background: var(--pke-bg-primary);
   color: var(--pke-text-primary);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-plus-jakarta), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -141,6 +136,28 @@ body {
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Nav Shimmer Effect */
+.shimmer-nav {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-nav::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+.shimmer-nav:hover::after {
+  animation: shimmerNav 0.6s forwards;
+  opacity: 1;
+}
+
+@keyframes shimmerNav {
+  100% { left: 200%; }
 }
 
 /* ─── Card Styles ─────────────────────────────────────── */
@@ -321,10 +338,10 @@ body {
 /* ─── Glassmorphism ───────────────────────────────────── */
 
 .pke-glass {
-  background: rgba(26, 34, 54, 0.75);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(42, 53, 80, 0.6);
+  border-bottom: 1px solid var(--pke-border);
 }
 
 /* ─── Stagger Animation Delays ────────────────────────── */

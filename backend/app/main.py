@@ -23,7 +23,7 @@ from app.config import settings
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown lifecycle."""
     # ── Startup ──────────────────────────────────────────
-    print(f"🚀 PKE Backend starting on {settings.api_host}:{settings.api_port}")
+    print(f" PKE Backend starting on {settings.api_host}:{settings.api_port}")
     print(f"   Device: {settings.model_device}")
     print(f"   Embedding dim: {settings.embedding_dim}")
     print(f"   Deviation threshold: {settings.deviation_threshold}")
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # ── Shutdown ─────────────────────────────────────────
-    print("🛑 PKE Backend shutting down")
+    print(" PKE Backend shutting down")
     # Cleanup resources if needed
 
 

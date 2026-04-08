@@ -16,12 +16,12 @@ def find_free_port(start_port: int) -> int:
     return port
 
 def main():
-    print("🔍 Looking for available ports...")
+    print(" Looking for available ports...")
     backend_port = find_free_port(8000)
     frontend_port = find_free_port(3000)
     
-    print(f"✅ Backend Port: {backend_port}")
-    print(f"✅ Frontend Port: {frontend_port}")
+    print(f" Backend Port: {backend_port}")
+    print(f" Frontend Port: {frontend_port}")
     
     backend_env = os.environ.copy()
     backend_env["API_PORT"] = str(backend_port)
@@ -39,17 +39,17 @@ def main():
         python_exe = os.path.join(venv_dir, "bin", "python")
         
     if not os.path.exists(python_exe):
-        print(f"⚠️  Virtual environment not found at {venv_dir}. Using system python.")
+        print(f"  Virtual environment not found at {venv_dir}. Using system python.")
         python_exe = sys.executable  # Fallback to system python
         
-    print(f"\n🚀 Starting Backend on http://localhost:{backend_port} ...")
+    print(f"\n Starting Backend on http://localhost:{backend_port} ...")
     backend_process = subprocess.Popen(
         [python_exe, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", str(backend_port)],
         cwd="backend",
         env=backend_env
     )
     
-    print(f"🚀 Starting Frontend on http://localhost:{frontend_port} ...")
+    print(f" Starting Frontend on http://localhost:{frontend_port} ...")
     frontend_process = subprocess.Popen(
         ["npm", "run", "dev"],
         cwd="frontend",
@@ -58,15 +58,15 @@ def main():
     )
     
     print("\n" + "="*50)
-    print("✨ Both servers are running! ✨")
-    print(f"🌐 Frontend App: http://localhost:{frontend_port}")
-    print(f"⚙️  Backend API:  http://localhost:{backend_port}")
-    print(f"📚 API Docs:     http://localhost:{backend_port}/docs")
+    print(" Both servers are running! ")
+    print(f" Frontend App: http://localhost:{frontend_port}")
+    print(f"  Backend API:  http://localhost:{backend_port}")
+    print(f" API Docs:     http://localhost:{backend_port}/docs")
     print("="*50 + "\n")
     print("Press Ctrl+C to shut down both servers safely.")
     
     def cleanup(signum, frame):
-        print("\n🛑 Shutting down servers...")
+        print("\n Shutting down servers...")
         backend_process.terminate()
         frontend_process.terminate()
         backend_process.wait()
@@ -81,11 +81,11 @@ def main():
         time.sleep(1)
         # Check if either process died unexpectedly
         if backend_process.poll() is not None:
-            print("⚠️ Backend server exited unexpectedly!")
+            print(" Backend server exited unexpectedly!")
             frontend_process.terminate()
             break
         if frontend_process.poll() is not None:
-            print("⚠️ Frontend server exited unexpectedly!")
+            print(" Frontend server exited unexpectedly!")
             backend_process.terminate()
             break
 

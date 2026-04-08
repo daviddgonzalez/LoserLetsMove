@@ -44,7 +44,7 @@ export default function LiveSession({ exerciseName }: LiveSessionProps) {
         case "result":
           addLog(
             "result",
-            `Rep ${message.rep_idx}: ${message.passed ? "✅ Good form" : "❌ Form deviation"} (distance: ${message.distance.toFixed(3)})`
+            `Rep ${message.rep_idx}: ${message.passed ? " Good form" : " Form deviation"} (distance: ${message.distance.toFixed(3)})`
           );
           break;
         case "session_end":
@@ -150,9 +150,9 @@ export default function LiveSession({ exerciseName }: LiveSessionProps) {
       </div>
 
       {/* Camera + Logs Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Camera */}
-        <div className="lg:col-span-2">
+      <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
+        {/* Camera (Left) */}
+        <div className="shrink-0 flex justify-center bg-white border border-[#e2e8f0] rounded-sm p-1.5 shadow-sm">
           <WebcamCapture
             onLandmarks={handleLandmarks}
             active={isStreaming}
@@ -161,10 +161,10 @@ export default function LiveSession({ exerciseName }: LiveSessionProps) {
           />
         </div>
 
-        {/* Session Log */}
-        <div className="pke-card flex flex-col h-[520px]">
-          <div className="px-4 py-3 border-b border-[var(--pke-border)] flex items-center justify-between">
-            <h3 className="text-sm font-medium text-[var(--pke-text-primary)]">
+        {/* Session Log (Right) */}
+        <div className="border border-[#e2e8f0] bg-white flex flex-col h-[480px] flex-1 w-full min-w-0 shadow-sm">
+          <div className="px-6 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-[#0f172a]">
               Session Log
             </h3>
             <div className="flex items-center gap-1.5">

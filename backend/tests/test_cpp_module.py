@@ -2,7 +2,7 @@
 Phase 3 Verification: Test the C++ pke_cpp module.
 
 Run from PowerShell (with venv active):
-    cd C:\TLDP\LoserLetsMove\backend
+    cd C:\TLDP\MyPose\backend
     python tests/test_cpp_module.py
 """
 
