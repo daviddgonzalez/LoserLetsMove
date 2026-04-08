@@ -103,7 +103,7 @@ export default function Navbar() {
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-[var(--pke-border)]">
-          <div className="flex items-center gap-2 text-[11px] text-[var(--pke-text-muted)]">
+          <div className="flex items-center gap-2 text-[11px] text-[var(--pke-text-muted)]" suppressHydrationWarning>
             <span className="w-2 h-2 rounded-full bg-[var(--pke-success)]" />
             Backend: {(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/^https?:\/\//, '')}
           </div>

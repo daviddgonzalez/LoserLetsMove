@@ -105,7 +105,7 @@ export default function PoseOverlay({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute top-0 left-0 pointer-events-none"
+      className="absolute top-0 left-0 pointer-events-none -scale-x-100"
       style={{ width, height }}
     />
   );

@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
-      <body className="min-h-full flex">
+      <body className="min-h-full flex" suppressHydrationWarning>
         <Navbar />
         <main className="flex-1 min-h-screen overflow-y-auto md:ml-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16 md:pt-6">

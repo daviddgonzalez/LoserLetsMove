@@ -30,55 +30,94 @@ export default function WebcamCapture({
   const [currentLandmarks, setCurrentLandmarks] = useState<
     { x: number; y: number; z: number }[] | null
   >(null);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
 
   const { isLoading, isReady, error: mpError, detectPose } = useMediaPipe();
 
   // Start camera
   useEffect(() => {
     let stream: MediaStream | null = null;
+    let isMounted = true;
 
     async function startCamera() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        setCameraError(null);
+        setCameraReady(false);
+        
+        const constraints: MediaStreamConstraints = {
           video: {
             width: { ideal: width },
             height: { ideal: height },
-            facingMode: "user",
+            ...(selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : { facingMode: "user" })
           },
-        });
+        };
+
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        if (!isMounted) return;
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           // Wait for the stream to be ready before playing
           await new Promise<void>((resolve) => {
-            videoRef.current!.onloadedmetadata = () => resolve();
+            if (!videoRef.current) return resolve();
+            videoRef.current.onloadedmetadata = () => resolve();
           });
           try {
             await videoRef.current.play();
+            setCameraReady(true);
+            
+            // Fetch devices now that we have permission
+            const allDevices = await navigator.mediaDevices.enumerateDevices();
+            const videoInputs = allDevices.filter(d => d.kind === "videoinput");
+            setDevices(videoInputs);
+            
+            // Set active device if none selected explicitly yet
+            if (!selectedDeviceId && videoInputs.length > 0) {
+              const activeTrack = stream.getVideoTracks()[0];
+              const activeDevice = videoInputs.find(d => d.label === activeTrack.label);
+              if (activeDevice) {
+                setSelectedDeviceId(activeDevice.deviceId);
+              }
+            }
           } catch (e) {
             // Ignore AbortError — happens when component remounts quickly
             if (e instanceof DOMException && e.name === "AbortError") return;
             throw e;
           }
-          setCameraReady(true);
         }
       } catch (err) {
-        setCameraError(
-          err instanceof Error
-            ? err.message
-            : "Camera access denied"
-        );
+        if (!isMounted) return;
+        const msg = err instanceof Error ? err.message : "Camera access denied";
+        
+        let errorHint = msg;
+        if (msg.toLowerCase().includes("allocate") || msg.toLowerCase().includes("readable")) {
+          errorHint = msg + " (Check if another app like Zoom or OBS is locking the camera)";
+        }
+        setCameraError(errorHint);
+        setCameraReady(false);
+        
+        // Still try to enumerate devices to let user pick a different one
+        try {
+          const allDevices = await navigator.mediaDevices.enumerateDevices();
+          const videoInputs = allDevices.filter(d => d.kind === "videoinput");
+          if (videoInputs.length > 0) setDevices(videoInputs);
+        } catch (e) {
+          // ignore enumeration errors if already denied
+        }
       }
     }
 
     startCamera();
 
     return () => {
+      isMounted = false;
       if (stream) {
         stream.getTracks().forEach((t) => t.stop());
       }
     };
-  }, [width, height]);
+  }, [width, height, selectedDeviceId]);
 
   // Frame processing loop
   const processFrame = useCallback(() => {
@@ -142,6 +181,20 @@ export default function WebcamCapture({
         </div>
       </div>
 
+      {devices.length > 1 && (
+        <select 
+          className="w-full text-sm p-2 rounded-lg bg-[var(--pke-bg-card)] border border-[var(--pke-border)] text-[var(--pke-text-primary)]"
+          value={selectedDeviceId}
+          onChange={(e) => setSelectedDeviceId(e.target.value)}
+        >
+          {devices.map(d => (
+            <option key={d.deviceId} value={d.deviceId}>
+              {d.label || `Camera ${d.deviceId.slice(0, 5)}...`}
+            </option>
+          ))}
+        </select>
+      )}
+
       {/* Video Container */}
       <div
         className="relative rounded-xl overflow-hidden border border-[var(--pke-border)] bg-black"
@@ -149,7 +202,7 @@ export default function WebcamCapture({
       >
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover -scale-x-100"
           playsInline
           muted
         />
