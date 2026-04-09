@@ -149,6 +149,21 @@ export default function LiveSession({ exerciseName }: LiveSessionProps) {
         </div>
       </div>
 
+      {/* Demo Video */}
+      <div className="pke-card p-4">
+        <h3 className="text-sm font-medium text-[var(--pke-text-primary)] mb-2">
+          Example — Correct Squat Form
+        </h3>
+        <video
+          src="/examples/squat.mp4"
+          controls
+          loop
+          muted
+          playsInline
+          className="w-full max-w-md rounded-lg"
+        />
+      </div>
+
       {/* Camera + Logs Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Camera */}
