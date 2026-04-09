@@ -33,6 +33,8 @@ def main():
     
     # Identify Python executable
     venv_dir = os.path.join("backend", ".venv")
+    if not os.path.exists(venv_dir):
+        venv_dir = os.path.join("backend", "venv")
     if os.name == 'nt':
         python_exe = os.path.join(venv_dir, "Scripts", "python.exe")
     else:

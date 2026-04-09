@@ -37,6 +37,20 @@ The system is designed with a dual-ingestion architecture, supporting both real-
 * **Containerization & Deployment:** Docker (for containerizing the FastAPI application and PyTorch environment).
 * **High-Performance Logic:** C++ (for computationally heavy evaluation algorithms).
 
+## Quick Start (Running Locally)
+
+To run the full stack locally (Frontend + Backend), simply use the `start.py` script from the root directory:
+```powershell
+python start.py
+```
+This script will automatically start the backend FastAPI server and the Next.js frontend, and gracefully kill both when you press `Ctrl+C`.
+
+### Important Setup Rules
+If you encounter errors starting the project, double-check these common pitfalls:
+1. **Python Version**: You **must** use Python 3.10, 3.11, or 3.12. Do not use Python 3.13+ (MediaPipe does not provide C++ binaries for newer versions and will crash the backend).
+2. **Virtual Environment Location**: The `start.py` script expects your virtual environment to be located exactly at `backend\venv` (or `backend\.venv`). Create it using `python -m venv backend\venv`.
+3. **NPM Installs**: Do **not** run `npm install` in the root directory. It will create a `package.json` lockfile that permanently breaks the Next.js Turbopack compiler. You must run `npm install` strictly from inside the `frontend/` directory.
+
 ## System Architecture
 
 ### 1. Data Ingestion (Dual-Path Strategy)
