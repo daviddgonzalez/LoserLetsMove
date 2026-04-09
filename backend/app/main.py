@@ -17,6 +17,7 @@ from app.api.routes_evaluate import router as evaluate_router
 from app.api.routes_upload import router as upload_router
 from app.api.ws_live import router as ws_router
 from app.config import settings
+from app.ml.inference import load_model
 
 
 @asynccontextmanager
@@ -32,7 +33,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.model = None  # Will hold ST-GCN model once loaded
     app.state.device = settings.model_device
 
-    # TODO (Phase 4): Load ST-GCN model from checkpoint
+    # Load ST-GCN model from checkpoint
+    try:
+        app.state.model = load_model()
+        print("✅ ST-GCN model loaded successfully")
+    except Exception as e:
+        print(f"⚠️  Failed to load ST-GCN model: {e}")
+        print("   Proceeding without model (embeddings will be placeholder)")
+
     # TODO (Phase 1): Initialize Supabase client singleton
 
     yield
