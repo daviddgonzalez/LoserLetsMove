@@ -24,8 +24,6 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# MediaPipe Pose configuration
-_mp_pose = mp.solutions.pose
 
 
 def extract_landmarks_from_video(
@@ -79,6 +77,7 @@ def extract_landmarks_from_video(
     all_landmarks: list[np.ndarray] = []
     frame_idx = 0
 
+    _mp_pose = mp.solutions.pose
     with _mp_pose.Pose(
         static_image_mode=False,
         model_complexity=model_complexity,
