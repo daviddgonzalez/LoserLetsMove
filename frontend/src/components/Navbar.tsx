@@ -1,114 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: "📊" },
-  { href: "/catalog", label: "Catalog", icon: "📋" },
-  { href: "/upload", label: "Upload", icon: "📤" },
-  { href: "/live", label: "Live Session", icon: "🎥" },
-  { href: "/calibrate", label: "Calibrate", icon: "🎯" },
-];
+import { useState, useRef, useEffect } from "react";
+import { EXERCISES } from "@/lib/exercises";
 
 export default function Navbar() {
-  const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const catalogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (catalogRef.current && !catalogRef.current.contains(event.target as Node)) {
+        setCatalogOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <>
-      {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 pke-glass md:hidden">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-            Loser, Lets Move
-          </span>
+    <header className="sticky top-0 w-full z-50 bg-white border-b border-[#e2e8f0] h-16 flex items-center px-6 lg:px-12 flex-shrink-0">
+      <Link href="/" className="flex items-center mr-10">
+        <span className="text-xl font-bold text-[#0f172a] tracking-tight">
+          MyPose
+        </span>
+      </Link>
+
+      <nav className="hidden md:flex items-center gap-6 text-sm font-semibold uppercase tracking-wider">
+        <Link href="/" className="shimmer-nav px-3 py-2 text-[#475569] hover:text-[#0f172a] transition-colors">
+          Home
         </Link>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="pke-btn-ghost p-2 text-xl"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? "✕" : "☰"}
-        </button>
-      </header>
-
-      {/* Mobile Overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed top-0 left-0 z-50 h-full flex flex-col
-          bg-[var(--pke-bg-secondary)] border-r border-[var(--pke-border)]
-          transition-transform duration-300 ease-in-out
-          w-[var(--pke-sidebar-width)]
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 md:sticky md:z-auto md:h-screen md:shrink-0
-        `}
-      >
-        {/* Brand */}
-        <div className="flex items-center gap-3 px-6 h-16 border-b border-[var(--pke-border)]">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-lg">
-            L
-          </div>
-          <div>
-            <h1 className="text-sm font-semibold text-[var(--pke-text-primary)] tracking-tight">
-              Loser, Lets Move
-            </h1>
-            <p className="text-[10px] text-[var(--pke-text-muted)] leading-none">
-              Kinematic Evaluator
-            </p>
-          </div>
+        
+        <div className="relative" ref={catalogRef}>
+          <button 
+            onClick={() => setCatalogOpen(!catalogOpen)}
+            className="shimmer-nav px-3 py-2 text-[#475569] hover:text-[#0f172a] transition-colors flex items-center gap-1 cursor-pointer uppercase font-semibold tracking-wider"
+          >
+            Catalog
+            <svg className={`w-4 h-4 transition-transform ${catalogOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          
+          {catalogOpen && (
+            <div className="absolute top-full left-0 mt-0 w-64 bg-white border border-[#e2e8f0] shadow-md py-2 flex flex-col z-50">
+              {EXERCISES.map(ex => (
+                <Link
+                  key={ex.slug}
+                  href={`/catalog/${ex.slug}`}
+                  onClick={() => setCatalogOpen(false)}
+                  className="px-5 py-3 hover:bg-[#f8fafc] text-[#0f172a] text-sm font-semibold transition-colors text-left border-b border-[#f1f5f9] last:border-0"
+                >
+                  {ex.displayName}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Nav Links */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                  transition-all duration-150
-                  ${
-                    isActive
-                      ? "bg-[var(--pke-accent-glow)] text-[var(--pke-accent-hover)] border border-[var(--pke-accent)]/20"
-                      : "text-[var(--pke-text-secondary)] hover:text-[var(--pke-text-primary)] hover:bg-[var(--pke-bg-card)]"
-                  }
-                `}
-              >
-                <span className="text-base w-5 text-center">{item.icon}</span>
-                <span>{item.label}</span>
-                {isActive && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--pke-accent)]" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-[var(--pke-border)]">
-          <div className="flex items-center gap-2 text-[11px] text-[var(--pke-text-muted)]" suppressHydrationWarning>
-            <span className="w-2 h-2 rounded-full bg-[var(--pke-success)]" />
-            Backend: {(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/^https?:\/\//, '')}
-          </div>
-        </div>
-      </aside>
-    </>
+        <Link href="/build-progress" className="shimmer-nav px-3 py-2 text-[#475569] hover:text-[#0f172a] transition-colors">
+          Build Progress
+        </Link>
+      </nav>
+      
+      <div className="ml-auto hidden md:flex items-center gap-2 text-[10px] uppercase font-bold text-[#94a3b8] tracking-widest" suppressHydrationWarning>
+        <span className="w-1.5 h-1.5 bg-[#10b981]" />
+        API: {(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/^https?:\/\//, '')}
+      </div>
+    </header>
   );
 }

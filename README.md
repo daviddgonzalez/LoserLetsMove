@@ -1,4 +1,4 @@
-# LoserLetsMove
+# MyPose
 
 # Personalized Kinematic Evaluator (PKE)
 

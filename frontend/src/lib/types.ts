@@ -140,6 +140,7 @@ export interface Exercise {
   displayName: string;
   description: string;
   targetJoints: string[];
+  targetMuscles: string[];
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   icon: string;
   color: string;

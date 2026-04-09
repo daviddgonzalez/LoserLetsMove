@@ -156,7 +156,7 @@ export default function CalibrationWizard({
                   : ""
               }`}
             >
-              {i < currentStepIdx ? "✓" : i + 1}
+              {i < currentStepIdx ? "" : i + 1}
             </div>
             <span
               className={`text-xs font-medium hidden sm:inline ${
@@ -301,7 +301,7 @@ export default function CalibrationWizard({
                     className="flex items-center justify-between p-3 rounded-lg bg-[var(--pke-bg-surface)] border border-[var(--pke-border)]"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-[var(--pke-success)]">✓</span>
+                      <span className="text-[var(--pke-success)]"></span>
                       <span className="text-sm text-[var(--pke-text-primary)]">
                         Sequence {seq.id}
                       </span>
@@ -370,7 +370,7 @@ export default function CalibrationWizard({
                     Processing…
                   </>
                 ) : (
-                  "Finalize Calibration ✓"
+                  "Finalize Calibration "
                 )}
               </button>
             </div>
@@ -380,7 +380,7 @@ export default function CalibrationWizard({
         {/* Step 4: Complete */}
         {step === "finalize" && (
           <div className="text-center py-8 space-y-4">
-            <div className="text-5xl">🎉</div>
+            <div className="text-5xl"></div>
             <h3 className="text-xl font-semibold text-[var(--pke-text-primary)]">
               Calibration Submitted
             </h3>

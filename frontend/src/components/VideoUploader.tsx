@@ -107,17 +107,17 @@ export default function VideoUploader() {
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={`
-            relative cursor-pointer rounded-xl border-2 border-dashed p-12
+            relative cursor-pointer border-[2px] border-dashed p-6
             flex flex-col items-center justify-center gap-4
-            transition-all duration-200
+            transition-all duration-200 h-[480px] w-full
             ${
               isDragging
-                ? "border-[var(--pke-accent)] bg-[var(--pke-accent-glow)]"
-                : "border-[var(--pke-border)] hover:border-[var(--pke-border-hover)] bg-[var(--pke-bg-surface)]"
+                ? "border-[#0f172a] bg-[#f8fafc]"
+                : "border-[#e2e8f0] hover:border-[#cbd5e1] bg-white"
             }
           `}
         >
-          <div className="text-4xl">{isDragging ? "📥" : "📤"}</div>
+          <div className="text-4xl">{isDragging ? "" : ""}</div>
           <div className="text-center">
             <p className="text-sm font-medium text-[var(--pke-text-primary)]">
               {isDragging
@@ -146,7 +146,7 @@ export default function VideoUploader() {
       {file && !taskStatus && (
         <div className="pke-card p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🎬</span>
+            <span className="text-2xl"></span>
             <div>
               <p className="text-sm font-medium text-[var(--pke-text-primary)]">
                 {file.name}
