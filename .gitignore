@@ -23,8 +23,7 @@ frontend/.vite/
 *.pth
 *.onnx
 checkpoints/
-data/
-
+dataset/
 # ─── C++ Build ──────────────────────────────────────────
 cpp/build/
 *.so
