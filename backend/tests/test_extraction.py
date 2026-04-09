@@ -15,19 +15,19 @@ class TestExtractLandmarksFromFrames:
     """Tests for the WebSocket frame → numpy converter."""
 
     def test_basic_conversion(self):
-        """Convert a list of frame dicts to (T, 33, 4) array."""
+        """Convert a list of frame dicts to (T, 25, 4) array."""
         frames = [
             {
                 "frame_idx": 0,
-                "landmarks": [[float(j), float(j + 1), float(j + 2)] for j in range(33)],
+                "landmarks": [[float(j), float(j + 1), float(j + 2)] for j in range(25)],
             },
             {
                 "frame_idx": 1,
-                "landmarks": [[float(j + 10), float(j + 11), float(j + 12)] for j in range(33)],
+                "landmarks": [[float(j + 10), float(j + 11), float(j + 12)] for j in range(25)],
             },
         ]
         result = extract_landmarks_from_frames(frames)
-        assert result.shape == (2, 33, 4)
+        assert result.shape == (2, 25, 4)
         assert result.dtype == np.float32
 
     def test_visibility_defaults_to_one(self):
@@ -35,7 +35,7 @@ class TestExtractLandmarksFromFrames:
         frames = [
             {
                 "frame_idx": 0,
-                "landmarks": [[1.0, 2.0, 3.0] for _ in range(33)],
+                "landmarks": [[1.0, 2.0, 3.0] for _ in range(25)],
             }
         ]
         result = extract_landmarks_from_frames(frames)
@@ -46,7 +46,7 @@ class TestExtractLandmarksFromFrames:
         frames = [
             {
                 "frame_idx": 0,
-                "landmarks": [[1.0, 2.0, 3.0, 0.85] for _ in range(33)],
+                "landmarks": [[1.0, 2.0, 3.0, 0.85] for _ in range(25)],
             }
         ]
         result = extract_landmarks_from_frames(frames)

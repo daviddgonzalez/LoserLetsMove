@@ -8,7 +8,7 @@ import type { WSFrameMessage, WSIncomingMessage } from "./types";
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL ||
   (typeof window !== "undefined"
-    ? `ws://${window.location.hostname}:8000`
+    ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.hostname}:8000`
     : "ws://localhost:8000");
 
 export type WSEventHandler = (message: WSIncomingMessage) => void;
@@ -82,7 +82,7 @@ export class PKEWebSocket {
 
   /**
    * Send a single frame of landmarks to the server.
-   * landmarks should be a 33-element array of [x, y, z] arrays.
+   * landmarks should be a 25-element array of [x, y, z] arrays.
    */
   sendFrame(landmarks: number[][]): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {

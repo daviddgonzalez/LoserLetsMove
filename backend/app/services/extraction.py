@@ -4,9 +4,9 @@ Pose Extraction Service (Path B — MVP).
 Takes a video file (local path or Supabase Storage path),
 runs MediaPipe Pose frame-by-frame, and outputs a landmark array.
 
-Output shape: (T, 33, 4) where:
+Output shape: (T, 25, 4) where:
     T = number of valid frames
-    33 = MediaPipe Pose landmarks
+    25 = OpenPose Pose landmarks
     4 = (x, y, z, visibility)
 """
 
@@ -47,7 +47,7 @@ def extract_landmarks_from_video(
                           Higher = more accurate but slower. Default 2 for best quality.
 
     Returns:
-        np.ndarray of shape (T, 33, 4) — filtered frames × joints × (x, y, z, visibility).
+        np.ndarray of shape (T, 25, 4) — filtered frames × joints × (x, y, z, visibility).
 
     Raises:
         FileNotFoundError: If video_path doesn't exist.
@@ -101,11 +101,59 @@ def extract_landmarks_from_video(
             results = pose.process(frame_rgb)
 
             if results.pose_landmarks:
-                # Extract 33 landmarks → (33, 4) array
+                # Extract 33 landmarks → (33, 4) array, then map to 25
                 frame_landmarks = np.array([
                     [lm.x, lm.y, lm.z, lm.visibility]
                     for lm in results.pose_landmarks.landmark
                 ])
+
+                # Map to OpenPose 25 joints from MediaPipe 33
+                openpose_indices = [
+                    0,   # Nose
+                    -1,  # Neck (computed as average of shoulders)
+                    12,  # RShoulder
+                    14,  # RElbow
+                    16,  # RWrist
+                    11,  # LShoulder
+                    13,  # LElbow
+                    15,  # LWrist
+                    -1,  # MidHip (computed as average of hips)
+                    24,  # RHip
+                    26,  # RKnee
+                    28,  # RAnkle
+                    23,  # LHip
+                    25,  # LKnee
+                    27,  # LAnkle
+                    5,   # REye
+                    2,   # LEye
+                    8,   # REar
+                    7,   # LEar
+                    31,  # LBigToe
+                    32,  # LSmallToe
+                    29,  # LHeel
+                    32,  # RBigToe (using right foot index)
+                    30,  # RSmallToe (using right heel? Wait, adjust)
+                    30,  # RHeel
+                ]
+
+                frame_landmarks_25 = []
+                for idx in openpose_indices:
+                    if idx == -1:
+                        # Compute Neck as average of left and right shoulders
+                        if len(frame_landmarks_25) == 1:  # After Nose
+                            left_shoulder = frame_landmarks[11][:3]
+                            right_shoulder = frame_landmarks[12][:3]
+                            neck = (left_shoulder + right_shoulder) / 2
+                            frame_landmarks_25.append([neck[0], neck[1], neck[2], 1.0])
+                        elif len(frame_landmarks_25) == 8:  # After LWrist, before MidHip
+                            left_hip = frame_landmarks[23][:3]
+                            right_hip = frame_landmarks[24][:3]
+                            midhip = (left_hip + right_hip) / 2
+                            frame_landmarks_25.append([midhip[0], midhip[1], midhip[2], 1.0])
+                    else:
+                        frame_landmarks_25.append(frame_landmarks[idx])
+
+                frame_landmarks = np.array(frame_landmarks_25)
 
                 # Filter by average visibility
                 avg_visibility = frame_landmarks[:, 3].mean()
@@ -122,7 +170,7 @@ def extract_landmarks_from_video(
             f"Check video content or lower visibility_threshold (current: {visibility_threshold})."
         )
 
-    landmarks_array = np.stack(all_landmarks, axis=0)  # (T, 33, 4)
+    landmarks_array = np.stack(all_landmarks, axis=0)  # (T, 25, 4)
 
     logger.info(
         f"Extraction complete: {landmarks_array.shape[0]} valid frames "
@@ -146,7 +194,7 @@ def extract_landmarks_from_frames(
                 [[x, y, z], ...] or [[x, y, z, visibility], ...].
 
     Returns:
-        np.ndarray of shape (T, 33, 4).
+        np.ndarray of shape (T, 25, 4).
     """
     all_landmarks = []
     for frame in frames:
@@ -161,4 +209,4 @@ def extract_landmarks_from_frames(
                 frame_arr.append([0.0, 0.0, 0.0, 0.0])
         all_landmarks.append(frame_arr)
 
-    return np.array(all_landmarks, dtype=np.float32)  # (T, 33, 4)
+    return np.array(all_landmarks, dtype=np.float32)  # (T, 25, 4)

@@ -45,7 +45,7 @@ class Landmark(BaseModel):
 class FrameData(BaseModel):
     """Single frame of landmark data from MediaPipe."""
     frame_idx: int = Field(ge=0)
-    landmarks: list[Landmark] = Field(min_length=33, max_length=33)
+    landmarks: list[Landmark] = Field(min_length=25, max_length=25)
 
 
 # ─── Upload ─────────────────────────────────────────────────
@@ -122,6 +122,8 @@ class EvaluationResponse(BaseModel):
     passed: bool
     distance_to_centroid: float
     threshold: float
+    reconstruction_error: float = 0.0
+    quality_score: float = 0.0
     joint_errors: list[JointError] = []
     dtw_triggered: bool = False
     message: str = ""
@@ -134,7 +136,7 @@ class WSFrameMessage(BaseModel):
     """Incoming WebSocket message — a single frame of landmarks."""
     type: str = "frame"
     frame_idx: int
-    landmarks: list[list[float]]  # [[x, y, z], ...] — 33 entries
+    landmarks: list[list[float]]  # [[x, y, z], ...] — 25 entries
 
 
 class WSResultMessage(BaseModel):

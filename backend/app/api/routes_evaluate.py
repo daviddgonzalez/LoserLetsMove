@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
+import numpy as np
 import torch
 
 from app.config import settings
 from app.utils.schemas import EvaluationRequest, EvaluationResponse
 from app.services.normalization import normalize_landmarks
-from ml.inference import generate_embedding
+from ml.inference import evaluate_squat_technique, generate_embedding
 
 router = APIRouter()
 
@@ -33,39 +34,55 @@ async def evaluate_movement(request: EvaluationRequest, req: Request):
     """
     evaluation_id = str(uuid.uuid4())
 
-    # Normalize landmarks
-    landmarks = torch.tensor(request.landmarks, dtype=torch.float32)
-    normalized = normalize_landmarks(landmarks.numpy())
+    # Convert request landmarks into numpy array shape (T, 25, 4)
+    landmarks_np = np.array(
+        [
+            [[lm.x, lm.y, lm.z, lm.visibility] for lm in frame.landmarks]
+            for frame in request.landmarks
+        ],
+        dtype=np.float32,
+    )
+
+    normalized = normalize_landmarks(landmarks_np)
     normalized_tensor = torch.from_numpy(normalized).float()
 
-    # Generate embedding
     model = req.app.state.model
-    if model:
-        embedding = generate_embedding(model, normalized_tensor.unsqueeze(0))
-    else:
-        embedding = torch.randn(256).tolist()
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
 
-    # TODO: Query user's centroid from Supabase
-    # For now, assume centroid is zero
+    if request.exercise_name.lower() == "squat":
+        result = evaluate_squat_technique(model, normalized_tensor.unsqueeze(0))
+        error = result["reconstruction_error"]
+        score = result["quality_score"]
+        passed = error < settings.deviation_threshold
+        return EvaluationResponse(
+            evaluation_id=evaluation_id,
+            passed=passed,
+            distance_to_centroid=error,
+            threshold=settings.deviation_threshold,
+            reconstruction_error=error,
+            quality_score=score,
+            joint_errors=[],
+            dtw_triggered=False,
+            message="Squat technique evaluated using reconstruction error.",
+        )
+
+    # Fallback for unsupported exercises: use embedding distance placeholder
+    embedding = generate_embedding(model, normalized_tensor.unsqueeze(0))
     centroid = [0.0] * 256
-
-    # Compute cosine distance
-    import numpy as np
     emb_np = np.array(embedding)
     cent_np = np.array(centroid)
-    distance = 1 - np.dot(emb_np, cent_np) / (np.linalg.norm(emb_np) * np.linalg.norm(cent_np))
-
+    distance = 1 - np.dot(emb_np, cent_np) / (np.linalg.norm(emb_np) * np.linalg.norm(cent_np) + 1e-8)
     passed = distance < settings.deviation_threshold
-
-    # TODO: If not passed, run DTW
 
     return EvaluationResponse(
         evaluation_id=evaluation_id,
         passed=passed,
         distance_to_centroid=distance,
         threshold=settings.deviation_threshold,
+        reconstruction_error=distance,
+        quality_score=max(0.0, 1.0 - distance / settings.deviation_threshold),
         joint_errors=[],
         dtw_triggered=False,
-        message="Evaluation completed with placeholder centroid.",
-    )
+        message="Evaluation completed using placeholder centroid fallback.",
     )

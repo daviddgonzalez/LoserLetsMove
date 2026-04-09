@@ -23,7 +23,7 @@ from app.services.normalization import (
 
 def _make_synthetic_landmarks(
     num_frames: int = 30,
-    num_joints: int = 33,
+    num_joints: int = 25,
 ) -> np.ndarray:
     """
     Generate synthetic landmark data for testing.
@@ -31,7 +31,7 @@ def _make_synthetic_landmarks(
     Creates a skeleton where key joints (hips, shoulders) are at
     known positions so normalization results are predictable.
 
-    Returns: (T, 33, 4) array with x, y, z, visibility.
+    Returns: (T, 25, 4) array with x, y, z, visibility.
     """
     rng = np.random.RandomState(42)
     landmarks = rng.randn(num_frames, num_joints, 4).astype(np.float32)
@@ -115,23 +115,23 @@ class TestResampleTemporal:
 
     def test_output_shape(self):
         """Output should have exactly target_length frames."""
-        coords = np.random.randn(50, 33, 3).astype(np.float32)
+        coords = np.random.randn(50, 25, 3).astype(np.float32)
         result = _resample_temporal(coords, target_length=64)
-        assert result.shape == (64, 33, 3)
+        assert result.shape == (64, 25, 3)
 
     def test_identity_when_same_length(self):
         """If input length == target length, output should equal input."""
-        coords = np.random.randn(64, 33, 3).astype(np.float32)
+        coords = np.random.randn(64, 25, 3).astype(np.float32)
         result = _resample_temporal(coords, target_length=64)
         np.testing.assert_array_equal(result, coords)
 
     def test_upsample(self):
         """Upsampling from fewer frames should interpolate smoothly."""
-        coords = np.zeros((10, 33, 3), dtype=np.float32)
+        coords = np.zeros((10, 25, 3), dtype=np.float32)
         coords[-1, :, :] = 1.0  # Last frame all ones
 
         result = _resample_temporal(coords, target_length=20)
-        assert result.shape == (20, 33, 3)
+        assert result.shape == (20, 25, 3)
 
         # First frame should still be ~0, last should be ~1
         np.testing.assert_allclose(result[0, 0, 0], 0.0, atol=1e-5)
@@ -139,19 +139,19 @@ class TestResampleTemporal:
 
     def test_downsample(self):
         """Downsampling should reduce frame count."""
-        coords = np.random.randn(128, 33, 3).astype(np.float32)
+        coords = np.random.randn(128, 25, 3).astype(np.float32)
         result = _resample_temporal(coords, target_length=32)
-        assert result.shape == (32, 33, 3)
+        assert result.shape == (32, 25, 3)
 
 
 class TestNormalizeLandmarks:
     """Tests for the full normalize_landmarks pipeline."""
 
     def test_output_shape(self):
-        """Full pipeline should produce (1, 3, 64, 33) tensor."""
+        """Full pipeline should produce (1, 3, 64, 25) tensor."""
         landmarks = _make_synthetic_landmarks(50)
         result = normalize_landmarks(landmarks, sequence_length=64)
-        assert result.shape == (1, 3, 64, 33)
+        assert result.shape == (1, 3, 64, 25)
 
     def test_output_dtype(self):
         """Output should be float32."""
@@ -163,7 +163,7 @@ class TestNormalizeLandmarks:
         """Should respect custom sequence_length parameter."""
         landmarks = _make_synthetic_landmarks(100)
         result = normalize_landmarks(landmarks, sequence_length=128)
-        assert result.shape == (1, 3, 128, 33)
+        assert result.shape == (1, 3, 128, 25)
 
     def test_no_nans(self):
         """Output should not contain NaN values."""
@@ -177,14 +177,14 @@ class TestComputeJointAngles:
 
     def test_output_shape(self):
         """Should return (T, N_angles) array."""
-        coords = np.random.randn(30, 33, 3).astype(np.float32)
+        coords = np.random.randn(30, 25, 3).astype(np.float32)
         angles = compute_joint_angles(coords)
         assert angles.shape[0] == 30
         assert angles.shape[1] == 10  # 10 angle triplets defined
 
     def test_angles_in_valid_range(self):
         """All angles should be in [0, π] radians."""
-        coords = np.random.randn(20, 33, 3).astype(np.float32)
+        coords = np.random.randn(20, 25, 3).astype(np.float32)
         angles = compute_joint_angles(coords)
         assert np.all(angles >= 0.0)
         assert np.all(angles <= np.pi + 1e-6)

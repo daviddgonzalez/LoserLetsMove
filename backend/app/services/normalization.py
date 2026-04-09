@@ -6,8 +6,8 @@ Transforms raw MediaPipe landmarks into model-ready tensors via three steps:
   2. Scale invariance (normalize by torso length per frame)
   3. Temporal resampling (fixed-length sequence via linear interpolation)
 
-Input:  (T, 33, 4)  — raw landmarks from extraction (x, y, z, visibility)
-Output: (1, 3, T_fixed, 33) — model-ready tensor (Batch, Channels, Time, Joints)
+Input:  (T, 25, 4)  — raw landmarks from extraction (x, y, z, visibility)
+Output: (1, 3, T_fixed, 25) — model-ready tensor (Batch, Channels, Time, Joints)
 """
 
 from __future__ import annotations
@@ -16,11 +16,11 @@ import numpy as np
 
 from app.config import settings
 
-# MediaPipe Pose landmark indices (key anatomical points)
-LEFT_HIP = 23
-RIGHT_HIP = 24
-LEFT_SHOULDER = 11
-RIGHT_SHOULDER = 12
+# MediaPipe Pose landmark indices (now OpenPose 25)
+LEFT_HIP = 12
+RIGHT_HIP = 9
+LEFT_SHOULDER = 5
+RIGHT_SHOULDER = 2
 
 
 def normalize_landmarks(
@@ -31,16 +31,16 @@ def normalize_landmarks(
     Full normalization pipeline: center → scale → resample → reshape.
 
     Args:
-        landmarks: Raw landmarks of shape (T, 33, 4) from extraction.
+        landmarks: Raw landmarks of shape (T, 25, 4) from extraction.
         sequence_length: Target temporal length. Defaults to settings.sequence_length (64).
 
     Returns:
-        Normalized tensor of shape (1, 3, sequence_length, 33) ready for ST-GCN.
+        Normalized tensor of shape (1, 3, sequence_length, 25) ready for ST-GCN.
     """
     if sequence_length is None:
         sequence_length = settings.sequence_length
 
-    # Strip visibility → (T, 33, 3) — we only need x, y, z for the model
+    # Strip visibility → (T, 25, 3) — we only need x, y, z for the model
     coords = landmarks[:, :, :3].copy()
 
     # Step 1: Root-relative centering
@@ -53,10 +53,10 @@ def normalize_landmarks(
     coords = _resample_temporal(coords, sequence_length)
 
     # Step 4: Reshape for ST-GCN input convention
-    # From (T, 33, 3) → (1, 3, T, 33)
+    # From (T, 25, 3) → (1, 3, T, 25)
     # Transpose: (T, J, C) → (C, T, J) then add batch dim
-    tensor = coords.transpose(2, 0, 1)  # (3, T, 33)
-    tensor = np.expand_dims(tensor, axis=0)  # (1, 3, T, 33)
+    tensor = coords.transpose(2, 0, 1)  # (3, T, 25)
+    tensor = np.expand_dims(tensor, axis=0)  # (1, 3, T, 25)
 
     return tensor.astype(np.float32)
 
@@ -69,7 +69,7 @@ def _root_center(coords: np.ndarray) -> np.ndarray:
     which is the most stable anatomical reference point.
 
     Args:
-        coords: Shape (T, 33, 3).
+        coords: Shape (T, 25, 3).
 
     Returns:
         Root-centered coords of same shape.
@@ -77,7 +77,7 @@ def _root_center(coords: np.ndarray) -> np.ndarray:
     # Hip midpoint per frame: (T, 3)
     hip_mid = (coords[:, LEFT_HIP, :] + coords[:, RIGHT_HIP, :]) / 2.0
 
-    # Broadcast subtract: (T, 33, 3) - (T, 1, 3)
+    # Broadcast subtract: (T, 25, 3) - (T, 1, 3)
     centered = coords - hip_mid[:, np.newaxis, :]
 
     return centered
@@ -91,7 +91,7 @@ def _scale_normalize(coords: np.ndarray) -> np.ndarray:
     This removes body-size differences between users.
 
     Args:
-        coords: Root-centered coords of shape (T, 33, 3).
+        coords: Root-centered coords of shape (T, 25, 3).
 
     Returns:
         Scale-normalized coords of same shape.
@@ -108,7 +108,7 @@ def _scale_normalize(coords: np.ndarray) -> np.ndarray:
     # Avoid division by zero (e.g., if pose detection failed on a frame)
     torso_length = np.maximum(torso_length, 1e-6)
 
-    # Broadcast divide: (T, 33, 3) / (T, 1, 1)
+    # Broadcast divide: (T, 25, 3) / (T, 1, 1)
     normalized = coords / torso_length[:, np.newaxis, np.newaxis]
 
     return normalized
@@ -122,11 +122,11 @@ def _resample_temporal(coords: np.ndarray, target_length: int) -> np.ndarray:
     of the original video length or recording FPS.
 
     Args:
-        coords: Shape (T_original, 33, 3).
+        coords: Shape (T_original, 25, 3).
         target_length: Desired number of frames (e.g., 64).
 
     Returns:
-        Resampled coords of shape (target_length, 33, 3).
+        Resampled coords of shape (target_length, 25, 3).
     """
     t_original = coords.shape[0]
 
@@ -138,7 +138,7 @@ def _resample_temporal(coords: np.ndarray, target_length: int) -> np.ndarray:
     target_indices = np.linspace(0, t_original - 1, target_length)
 
     # Interpolate each joint coordinate independently
-    # coords shape: (T, 33, 3) → flatten last two dims for vectorized interp
+    # coords shape: (T, 25, 3) → flatten last two dims for vectorized interp
     t, j, c = coords.shape
     flat = coords.reshape(t, j * c)  # (T, 99)
 
@@ -146,7 +146,7 @@ def _resample_temporal(coords: np.ndarray, target_length: int) -> np.ndarray:
     for col in range(j * c):
         resampled_flat[:, col] = np.interp(target_indices, source_indices, flat[:, col])
 
-    return resampled_flat.reshape(target_length, j, c)  # (target_length, 33, 3)
+    return resampled_flat.reshape(target_length, j, c)  # (target_length, 25, 3)
 
 
 def compute_joint_angles(coords: np.ndarray) -> np.ndarray:
@@ -158,27 +158,27 @@ def compute_joint_angles(coords: np.ndarray) -> np.ndarray:
     between the bone vectors using the dot product formula.
 
     Args:
-        coords: Shape (T, 33, 3) — normalized or raw coordinates.
+        coords: Shape (T, 25, 3) — normalized or raw coordinates.
 
     Returns:
         Joint angles of shape (T, N_angles) where N_angles depends on
         the skeleton topology.
     """
     # Define joint triplets: (parent, joint, child) → angle at 'joint'
-    # Based on MediaPipe Pose connections for major body joints
+    # Based on OpenPose 25 joints
     angle_triplets = [
         # Right arm
-        (RIGHT_SHOULDER, 14, 16),  # shoulder → elbow → wrist
-        (12, RIGHT_SHOULDER, 14),  # hip-adjacent → shoulder → elbow
+        (RIGHT_SHOULDER, 3, 4),  # shoulder → elbow → wrist
+        (1, RIGHT_SHOULDER, 3),  # neck → shoulder → elbow
         # Left arm
-        (LEFT_SHOULDER, 13, 15),   # shoulder → elbow → wrist
-        (11, LEFT_SHOULDER, 13),   # hip-adjacent → shoulder → elbow
+        (LEFT_SHOULDER, 6, 7),   # shoulder → elbow → wrist
+        (1, LEFT_SHOULDER, 6),   # neck → shoulder → elbow
         # Right leg
-        (RIGHT_HIP, 26, 28),      # hip → knee → ankle
-        (0, RIGHT_HIP, 26),       # nose/root → hip → knee (trunk angle)
+        (RIGHT_HIP, 10, 11),      # hip → knee → ankle
+        (8, RIGHT_HIP, 10),       # midhip → hip → knee
         # Left leg
-        (LEFT_HIP, 25, 27),       # hip → knee → ankle
-        (0, LEFT_HIP, 25),        # nose/root → hip → knee
+        (LEFT_HIP, 13, 14),       # hip → knee → ankle
+        (8, LEFT_HIP, 13),        # midhip → hip → knee
         # Torso
         (LEFT_HIP, RIGHT_HIP, RIGHT_SHOULDER),  # hip alignment
         (LEFT_SHOULDER, RIGHT_SHOULDER, RIGHT_HIP),  # shoulder alignment

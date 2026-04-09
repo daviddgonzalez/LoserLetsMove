@@ -95,6 +95,8 @@ export interface EvaluationResponse {
   passed: boolean;
   distance_to_centroid: number;
   threshold: number;
+  reconstruction_error: number;
+  quality_score: number;
   joint_errors: JointError[];
   dtw_triggered: boolean;
   message: string;
@@ -105,7 +107,7 @@ export interface EvaluationResponse {
 export interface WSFrameMessage {
   type: "frame";
   frame_idx: number;
-  landmarks: number[][]; // [[x, y, z], ...] — 33 entries
+  landmarks: number[][]; // [[x, y, z], ...] — 25 entries
 }
 
 export interface WSAckMessage {

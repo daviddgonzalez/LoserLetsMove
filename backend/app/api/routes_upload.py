@@ -50,7 +50,7 @@ async def _process_video(task_id: str, local_path: str):
             extract_landmarks_from_video,
             local_path,
         )
-        # landmarks shape: (T, 33, 4)
+        # landmarks shape: (T, 25, 4)
 
         _tasks[task_id].progress = 0.6
         _tasks[task_id].landmarks_extracted = landmarks.shape[0]
@@ -62,15 +62,15 @@ async def _process_video(task_id: str, local_path: str):
             normalize_landmarks,
             landmarks,
         )
-        # normalized shape: (1, 3, 64, 33)
+        # normalized shape: (1, 3, 64, 25)
 
         _tasks[task_id].progress = 0.9
         _tasks[task_id].message = "Normalization complete."
 
         # Store results
         _extraction_results[task_id] = {
-            "raw_landmarks": landmarks,       # (T, 33, 4)
-            "normalized_tensor": normalized,  # (1, 3, 64, 33)
+            "raw_landmarks": landmarks,       # (T, 25, 4)
+            "normalized_tensor": normalized,  # (1, 3, 64, 25)
             "raw_frame_count": landmarks.shape[0],
         }
 

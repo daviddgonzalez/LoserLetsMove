@@ -7,10 +7,20 @@ import {
   startCalibration,
   addCalibrationSequence,
   finalizeCalibration,
+  evaluateMovement,
 } from "@/lib/api";
-import type { FrameData, Landmark } from "@/lib/types";
+import type { EvaluationResponse, FrameData, Landmark } from "@/lib/types";
 
 type Step = "select" | "record" | "review" | "finalize";
+
+interface EvaluationResult {
+  passed: boolean;
+  distance_to_centroid: number;
+  threshold: number;
+  reconstruction_error: number;
+  quality_score: number;
+  message: string;
+}
 
 const REQUIRED_SEQUENCES = 3;
 const MAX_SEQUENCES = 5;
@@ -37,6 +47,9 @@ export default function CalibrationWizard({
   const [statusMsg, setStatusMsg] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [finalizing, setFinalizing] = useState(false);
+  const [evaluationResults, setEvaluationResults] = useState<
+    Record<number, EvaluationResult>
+  >({});
 
   const steps: { key: Step; label: string }[] = [
     { key: "select", label: "Select Exercise" },
@@ -140,6 +153,33 @@ export default function CalibrationWizard({
       setFinalizing(false);
     }
   }, [sessionId]);
+
+  const handleEvaluateSequence = useCallback(
+    async (sequence: RecordedSequence) => {
+      setError(null);
+      try {
+        const res: EvaluationResponse = await evaluateMovement({
+          user_id: "dev-user",
+          exercise_name: selectedExercise,
+          landmarks: sequence.frames,
+        });
+        setEvaluationResults((prev) => ({
+          ...prev,
+          [sequence.id]: {
+            passed: res.passed,
+            distance_to_centroid: res.distance_to_centroid,
+            threshold: res.threshold,
+            reconstruction_error: res.reconstruction_error,
+            quality_score: res.quality_score,
+            message: res.message,
+          },
+        }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Evaluation failed");
+      }
+    },
+    [selectedExercise]
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -328,28 +368,64 @@ export default function CalibrationWizard({
             </p>
 
             <div className="space-y-2">
-              {sequences.map((seq) => (
-                <div
-                  key={seq.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-[var(--pke-bg-surface)] border border-[var(--pke-border)]"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[var(--pke-success)]/15 flex items-center justify-center text-[var(--pke-success)] text-sm font-semibold">
-                      {seq.id}
+              {sequences.map((seq) => {
+                const evalResult = evaluationResults[seq.id];
+                return (
+                  <div
+                    key={seq.id}
+                    className="space-y-3 p-4 rounded-lg bg-[var(--pke-bg-surface)] border border-[var(--pke-border)]"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[var(--pke-success)]/15 flex items-center justify-center text-[var(--pke-success)] text-sm font-semibold">
+                          {seq.id}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-[var(--pke-text-primary)]">
+                            Sequence {seq.id}
+                          </p>
+                          <p className="text-xs text-[var(--pke-text-muted)]">
+                            {seq.frames.length} frames • {seq.duration.toFixed(1)} seconds
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleEvaluateSequence(seq)}
+                        className="pke-btn pke-btn-secondary pke-btn-sm"
+                      >
+                        Evaluate
+                      </button>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-[var(--pke-text-primary)]">
-                        Sequence {seq.id}
-                      </p>
-                      <p className="text-xs text-[var(--pke-text-muted)]">
-                        {seq.frames.length} frames •{" "}
-                        {seq.duration.toFixed(1)} seconds
-                      </p>
-                    </div>
+
+                    {evalResult && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[var(--pke-text-secondary)]">
+                        <div className="p-3 rounded-lg bg-[var(--pke-bg-muted)]">
+                          <p className="font-medium text-[var(--pke-text-primary)]">
+                            Quality Score
+                          </p>
+                          <p className="text-lg font-semibold">
+                            {(evalResult.quality_score * 100).toFixed(0)}%
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-[var(--pke-bg-muted)]">
+                          <p className="font-medium text-[var(--pke-text-primary)]">
+                            Reconstruction Error
+                          </p>
+                          <p className="text-lg font-semibold">
+                            {evalResult.reconstruction_error.toFixed(4)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {evalResult && (
+                      <div className="text-xs text-[var(--pke-text-muted)]">
+                        {evalResult.message}
+                      </div>
+                    )}
                   </div>
-                  <span className="pke-badge pke-badge-success">Ready</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex items-center gap-3 pt-2">

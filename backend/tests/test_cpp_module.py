@@ -22,9 +22,9 @@ def test_import():
 
 def test_joint_angles(pke_cpp):
     """Test 2: Compute joint angles from synthetic skeleton data."""
-    # Create fake skeleton: 30 frames, 33 joints, 3 coordinates (x, y, z)
+    # Create fake skeleton: 30 frames, 25 joints, 3 coordinates (x, y, z)
     np.random.seed(42)
-    coords = np.random.randn(30, 33, 3).astype(np.float32)
+    coords = np.random.randn(30, 25, 3).astype(np.float32)
 
     angles = pke_cpp.compute_angles_from_coords(coords)
 
@@ -96,7 +96,7 @@ def test_speed(pke_cpp):
     dtw_time = (time.perf_counter() - start) / 100
 
     # Benchmark joint angles
-    coords = np.random.randn(128, 33, 3).astype(np.float32)
+    coords = np.random.randn(128, 25, 3).astype(np.float32)
     pke_cpp.compute_angles_from_coords(coords)
 
     start = time.perf_counter()

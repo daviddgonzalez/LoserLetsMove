@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     target_fps: int = 30
     sequence_length: int = 64  # Frames per normalized sequence
     visibility_threshold: float = 0.5
-    num_joints: int = 33
+    num_joints: int = 25
 
 
 # Singleton — import this everywhere

@@ -24,7 +24,7 @@ class Exercise(BaseModel):
     """Row in exercises table."""
     id: str
     name: str
-    joint_count: int = 33
+    joint_count: int = 25
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
