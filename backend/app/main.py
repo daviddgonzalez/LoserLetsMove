@@ -17,7 +17,7 @@ from app.api.routes_evaluate import router as evaluate_router
 from app.api.routes_upload import router as upload_router
 from app.api.ws_live import router as ws_router
 from app.config import settings
-from app.ml.inference import load_model
+from ml.inference import load_model
 
 
 @asynccontextmanager

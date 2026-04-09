@@ -19,7 +19,7 @@ from app.utils.schemas import (
     CalibrationStatus,
 )
 from app.services.normalization import normalize_landmarks
-from app.ml.inference import generate_embedding
+from ml.inference import generate_embedding
 
 router = APIRouter()
 
